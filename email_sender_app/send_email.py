@@ -1,38 +1,51 @@
 import smtplib
 from email.message import EmailMessage
 import os
+import pymysql
+from pymysql import err as pymysql_err
 
-import os
+def connect_db():
+    try:
+        return pymysql.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="email_sender",
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+    except pymysql_err.MySQLError as e:
+        print(f"Error al conectar a la base de datos: {e}")
+        return None
 
-def send_email_logic(recipients, template_content, attachments, sender_email=None, sender_password=None):
+def send_email_logic(recipients, template_content, attachments, sender_email=None, sender_password=None, user_id=None, template_id=None, subject=None, body=None):
     """
     Envía un correo a los destinatarios con el contenido de la plantilla y archivos adjuntos.
+    Registra el correo enviado en la base de datos.
 
     :param recipients: lista de correos electrónicos destinatarios
     :param template_content: contenido del correo (HTML o texto)
     :param attachments: lista de rutas de archivos a adjuntar
     :param sender_email: correo remitente
     :param sender_password: contraseña del correo remitente
+    :param user_id: id del usuario que envía el correo
+    :param template_id: id de la plantilla usada
+    :param subject: asunto del correo
+    :param body: cuerpo del correo
     :return: (success: bool, error_message: str)
     """
-    # Eliminar el botón "Variables disponibles" no aplica aquí, ya que este archivo no contiene interfaz gráfica.
-    # Si deseas eliminar alguna funcionalidad relacionada con variables disponibles en el envío de correo,
-    # por favor especifica qué parte del código modificar.
-
-    import smtplib
-    from email.message import EmailMessage
-    import os
-
     try:
         msg = EmailMessage()
-        msg['Subject'] = 'Correo desde la aplicación'
+        msg['Subject'] = subject if subject else 'Correo desde la aplicación'
         if sender_email is None:
             sender_email = os.getenv('EMAIL_SENDER', 'tu_correo@gmail.com')  # Cambiar por variable de entorno o valor por defecto
         if sender_password is None:
             sender_password = os.getenv('EMAIL_PASSWORD', 'tu_contraseña')  # Cambiar por variable de entorno o valor por defecto
         msg['From'] = sender_email
         msg['To'] = ', '.join(recipients)
-        msg.set_content(template_content, subtype='html')
+        # Convertir saltos de línea en etiquetas <br> para HTML
+        html_content = template_content.replace('\n', '<br>\n')
+        msg.set_content(html_content, subtype='html')
 
         # Adjuntar archivos
         for filepath in attachments:
@@ -47,6 +60,24 @@ def send_email_logic(recipients, template_content, attachments, sender_email=Non
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
             smtp.login(sender_email, sender_password)
             smtp.send_message(msg)
+
+        # Registrar en la base de datos el correo enviado
+        if user_id and recipients and subject and body:
+            db = connect_db()
+            if db:
+                try:
+                    cursor = db.cursor()
+                    for recipient_email in recipients:
+                        cursor.execute(
+                            "INSERT INTO sent_emails (user_id, template_id, recipient_email, subject, body) VALUES (%s, %s, %s, %s, %s)",
+                            (user_id, template_id, recipient_email, subject, body)
+                        )
+                    db.commit()
+                    cursor.close()
+                except Exception as e:
+                    print(f"Error al registrar correo enviado: {e}")
+                finally:
+                    db.close()
 
         return True, None
     except Exception as e:

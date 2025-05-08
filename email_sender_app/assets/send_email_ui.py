@@ -124,7 +124,7 @@ class SendEmailUI:
             return
 
         # Obtener contenido de la plantilla real
-        subject, template_content = get_template(self.user_id, selected_template_name)
+        template_id, subject, template_content = get_template(self.user_id, selected_template_name)
 
         # Obtener primer contacto seleccionado para vista previa
         selected_indices = self.contact_listbox.curselection()
@@ -168,6 +168,16 @@ class SendEmailUI:
         self.preview_text.insert(tk.END, preview_text)
         self.preview_text.config(state=tk.DISABLED)
 
+    def saludo(self):
+        import datetime
+        hour = datetime.datetime.now().hour
+        if 6 <= hour < 12:
+            return "buenos días"
+        elif 12 <= hour < 20:
+            return "buenas tardes"
+        else:
+            return "buenas noches"
+
     def send_email(self):
         from email_templates import get_template
 
@@ -183,7 +193,7 @@ class SendEmailUI:
             return
 
         # Obtener contenido real de la plantilla
-        subject, template_content = get_template(self.user_id, template_name)
+        template_id, subject, template_content = get_template(self.user_id, template_name)
 
         # Preparar datos para enviar
         recipients = [c.get("email", "") for c in selected_contacts]
@@ -232,7 +242,7 @@ class SendEmailUI:
         for i, (recipient, content) in enumerate(zip(recipients, personalized_contents), start=1):
             self.progress['value'] = i
             self.window.update_idletasks()
-            success, error = send_email_logic([recipient], content, self.selected_files, sender_email=self.user_email, sender_password=sender_password)
+            success, error = send_email_logic([recipient], content, self.selected_files, sender_email=self.user_email, sender_password=sender_password, user_id=self.user_id, template_id=None, subject=subject, body=content)
             if not success:
                 all_success = False
                 errors.append(f"{recipient}: {error}")
@@ -244,6 +254,7 @@ class SendEmailUI:
             import traceback
             detailed_error = traceback.format_exc()
             messagebox.showerror("Error", f"No se pudieron enviar algunos correos:\n{chr(10).join(errors)}\nDetalles: {detailed_error}")
+            # No cerrar la ventana para permitir corrección
 
     def edit_template(self):
         messagebox.showinfo("Editar plantilla", "Funcionalidad de editar plantilla no implementada aún.")

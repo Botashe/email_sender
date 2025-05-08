@@ -402,7 +402,7 @@ class TemplateManagerUI:
         item_text = self.listbox.get(index)
         # Extract name from "name - subject"
         name = item_text.split(" - ")[0]
-        subject, content = get_template(self.user_id, name)
+        template_id, subject, content = get_template(self.user_id, name)
         self.name_entry.delete(0, tk.END)
         self.name_entry.insert(0, name)
         self.subject_entry.delete(0, tk.END)

@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 import pymysql
-import tkinter as tk
-from tkinter import simpledialog, messagebox
+import pymysql.err as pymysql_err
+
 def connect_db():
     try:
         return pymysql.connect(
@@ -52,15 +52,18 @@ def list_all_templates():
 def get_template(user_id, name):
     db = connect_db()
     if db is None:
-        return "", ""
+        return None, "", ""
     cursor = db.cursor()
     try:
-        cursor.execute("SELECT subject, content FROM templates WHERE user_id = %s AND name = %s", (user_id, name))
+        cursor.execute("SELECT id, subject, content FROM templates WHERE user_id = %s AND name = %s", (user_id, name))
         row = cursor.fetchone()
-        return (row['subject'], row['content']) if row else ("", "")
+        if row:
+            return row['id'], row['subject'], row['content']
+        else:
+            return None, "", ""
     except pymysql_err.MySQLError as e:
         messagebox.showerror("Error", f"Error al obtener plantilla: {e}")
-        return "", ""
+        return None, "", ""
     finally:
         cursor.close()
         db.close()
@@ -80,7 +83,7 @@ def add_template(user_id, name, subject, content):
         cursor.execute("INSERT INTO templates (user_id, name, subject, content) VALUES (%s, %s, %s, %s)", (user_id, name, subject, content))
         db.commit()
         return True
-    except pymysql.MySQLError as e:
+    except pymysql_err.MySQLError as e:
         messagebox.showerror("Error al agregar plantilla", f"No se pudo agregar la plantilla debido a un error inesperado. Detalles: {e}")
         return False
     finally:
