@@ -47,7 +47,7 @@ class MainInterface:
                 row = cursor.fetchone()
                 print(f"DEBUG: username query result: {row}")  # Debug print
                 if row:
-                    username = row[0]
+                    username = row['username']
                 cursor.close()
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo obtener el nombre de usuario: {e}")
