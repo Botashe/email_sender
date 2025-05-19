@@ -37,10 +37,11 @@ def send_email_logic(recipients, template_content, attachments, sender_email=Non
     try:
         msg = EmailMessage()
         msg['Subject'] = subject if subject else 'Correo desde la aplicación'
-        if sender_email is None:
+        if sender_email is None or sender_email.strip() == '':
             sender_email = os.getenv('EMAIL_SENDER', 'tu_correo@gmail.com')  # Cambiar por variable de entorno o valor por defecto
-        if sender_password is None:
+        if sender_password is None or sender_password.strip() == '':
             sender_password = os.getenv('EMAIL_PASSWORD', 'tu_contraseña')  # Cambiar por variable de entorno o valor por defecto
+        print(f"Enviando correo desde: {sender_email}")  # Log para debug
         msg['From'] = sender_email
         msg['To'] = ', '.join(recipients)
         # Convertir saltos de línea en etiquetas <br> para HTML
