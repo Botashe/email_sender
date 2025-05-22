@@ -8,8 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(100),
-    salt VARCHAR(50),
-    google_id VARCHAR(100),
     auth_provider VARCHAR(20) DEFAULT 'email',
     phone VARCHAR(20) NULL,
     address VARCHAR(255) NULL,

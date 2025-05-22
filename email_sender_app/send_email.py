@@ -35,6 +35,8 @@ def send_email_logic(recipients, template_content, attachments, sender_email=Non
     :return: (success: bool, error_message: str)
     """
     try:
+        if not template_id:
+            print("Advertencia: template_id no proporcionado, se usará NULL en la base de datos")
         msg = EmailMessage()
         msg['Subject'] = subject if subject else 'Correo desde la aplicación'
         if sender_email is None or sender_email.strip() == '':
@@ -71,7 +73,7 @@ def send_email_logic(recipients, template_content, attachments, sender_email=Non
                     for recipient_email in recipients:
                         cursor.execute(
                             "INSERT INTO sent_emails (user_id, template_id, recipient_email, subject, body) VALUES (%s, %s, %s, %s, %s)",
-                            (user_id, template_id, recipient_email, subject, body)
+                            (user_id, template_id if template_id else None, recipient_email, subject, body)
                         )
                     db.commit()
                     cursor.close()

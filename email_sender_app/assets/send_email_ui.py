@@ -242,10 +242,9 @@ class SendEmailUI:
         for i, (recipient, content) in enumerate(zip(recipients, personalized_contents), start=1):
             self.progress['value'] = i
             self.window.update_idletasks()
-            success, error = send_email_logic([recipient], content, self.selected_files, sender_email=self.user_email, sender_password=sender_password, user_id=self.user_id, template_id=None, subject=subject, body=content)
+            success, error = send_email_logic([recipient], content, self.selected_files, sender_email=self.user_email, sender_password=sender_password, user_id=self.user_id, template_id=template_id, subject=subject, body=content)
             if not success:
                 all_success = False
-                errors.append(f"{recipient}: {error}")
 
         if all_success:
             messagebox.showinfo("Éxito", "Correos enviados correctamente.")
